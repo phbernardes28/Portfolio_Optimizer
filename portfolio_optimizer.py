@@ -185,22 +185,47 @@ if st.session_state.sim_results:
 
         st.subheader("Asset Risk/Return Profile")
         
-        # --- FIXED BLOCK STARTS HERE ---
+        # --- FIXED COLUMN NAMING ---
         asset_stats = pd.DataFrame({
             "Annual Return": data['mean_returns'] * 252,
             "Annual Volatility": np.sqrt(np.diag(data['cov_matrix']) * 252)
         })
-        # Force column names so "Asset" is definitely there
         asset_stats = asset_stats.reset_index()
         asset_stats.columns = ['Asset', 'Annual Return', 'Annual Volatility']
-        # --- FIXED BLOCK ENDS HERE ---
         
         fig_bar = px.scatter(asset_stats, x='Annual Volatility', y='Annual Return', text='Asset', size_max=60)
         fig_bar.update_traces(textposition='top center')
         st.plotly_chart(fig_bar, use_container_width=True)
 
     with tab3:
-        st.write("Calculations based on 5,000 Monte Carlo simulations using the Sharpe Ratio formula:")
+        st.subheader("How this works")
+        st.markdown("""
+        This application uses **Modern Portfolio Theory (MPT)** to find the mathematically optimal mix of assets.
+        
+        ### 1. The Sharpe Ratio
+        We optimize for the risk-adjusted return using the Sharpe Ratio formula:
+        """)
+        
         st.latex(r''' Sharpe = \frac{R_p - R_f}{\sigma_p} ''')
+        
+        st.markdown(f"""
+        Where:
+        * $R_p$ is the Portfolio Return
+        * $R_f$ is the Risk-Free Rate (currently set to **{risk_free_rate*100}%**)
+        * $\sigma_p$ is the Portfolio Standard Deviation (Risk)
+        
+        ### 2. Monte Carlo Simulation
+        Instead of solving complex quadratic equations, we simulate **5,000 random portfolios**. 
+        By plotting every possible combination of weights, we reveal the **"Efficient Frontier"**—the boundary where you cannot get more return without taking more risk.
+        """)
+
+        st.warning("""
+        ### ⚠️ Limitations of MPT
+        While MPT is a Nobel Prize-winning theory, it is not without flaws. Acknowledging these is crucial for real-world application:
+        
+        * **Historical Bias:** The model assumes that *future* returns and correlations will look exactly like the *past*. In reality, market regimes change (e.g., inflation spikes, tech bubbles burst).
+        * **Normal Distribution Assumption:** MPT assumes returns follow a "Bell Curve." It often underestimates the probability of "Black Swan" events (extreme market crashes) where correlations converge to 1.
+        * **Static Correlations:** The model assumes the relationship between assets (e.g., Stocks vs. Bonds) is constant. In times of panic, assets that usually move oppositely may crash together.
+        """)
 else:
     st.info("👈 Enter tickers in the sidebar and click **Run Optimization**.")
