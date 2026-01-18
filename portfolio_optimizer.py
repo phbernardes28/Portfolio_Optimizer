@@ -120,7 +120,7 @@ if st.sidebar.button("Run Optimization", type="primary"):
                 # E. Run Simulation
                 results, weights = run_monte_carlo(mean_returns, cov_matrix, risk_free_rate)
                 
-                # F. Store in Session State (The Fix!)
+                # F. Store in Session State
                 sim_df = pd.DataFrame(results.T, columns=['Return', 'Volatility', 'Sharpe'])
                 
                 # Find Optimal
@@ -184,10 +184,16 @@ if st.session_state.sim_results:
         st.plotly_chart(fig_corr, use_container_width=True)
 
         st.subheader("Asset Risk/Return Profile")
+        
+        # --- FIXED BLOCK STARTS HERE ---
         asset_stats = pd.DataFrame({
             "Annual Return": data['mean_returns'] * 252,
             "Annual Volatility": np.sqrt(np.diag(data['cov_matrix']) * 252)
-        }).reset_index().rename(columns={'index': 'Asset'})
+        })
+        # Force column names so "Asset" is definitely there
+        asset_stats = asset_stats.reset_index()
+        asset_stats.columns = ['Asset', 'Annual Return', 'Annual Volatility']
+        # --- FIXED BLOCK ENDS HERE ---
         
         fig_bar = px.scatter(asset_stats, x='Annual Volatility', y='Annual Return', text='Asset', size_max=60)
         fig_bar.update_traces(textposition='top center')
